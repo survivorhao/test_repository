@@ -13,6 +13,10 @@ int main(int argc, char *argv[])
     
 	printf("git is powerful \n");
 
+	printf("aaaaaa \n");
+	
+	
+	
 	
     return 0;
 
