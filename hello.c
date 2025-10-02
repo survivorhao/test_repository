@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     
 	printf("git is powerful \n");
 	
-	
+	printf("git is powerful \n");
 	
 	
     return 0;
