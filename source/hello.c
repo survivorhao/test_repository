@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include "fun.h"
 
 
 
@@ -9,18 +10,8 @@ int main(int argc, char *argv[])
     {
 	printf("hello %s \n",argv[1]);
     }
-
-    printf("hello git world \n");
-    
-	printf("git is powerful \n");
-	
-	printf("git is powerful \n");
-	
-	
-    for(uint8_t i=0;i<4;i++)
-    {
-	    printf("hello linux \n");
-    }
+    func1();
+    func2();
 
     return 0;
 
