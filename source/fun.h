@@ -9,6 +9,7 @@ void fun3(void);
 void user_hhhao_hao_edit(void);
 
 
+void rebase_test(void);
 
 
 
