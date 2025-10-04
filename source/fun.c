@@ -19,3 +19,9 @@ void func2(void)
 
 
 }
+
+
+void fun3(void)
+{
+    printf("this is test3 \n");
+}
