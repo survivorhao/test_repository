@@ -12,7 +12,9 @@ int main(int argc, char *argv[])
     }
     func1();
     func2();
+    user_hhhao_hao_edit();
 
+    
     return 0;
 
 
