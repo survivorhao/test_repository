@@ -33,5 +33,19 @@ void bsp_driver_init(void)
 
     printf("bsp driver init success \n");
     
+}
+
+
+void user_hhhao_hao_edit(void)
+{
+	printf("this is user2 add content \n");
+
 
 }
+
+
+
+
+
+
+
