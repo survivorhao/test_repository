@@ -77,10 +77,11 @@ export struct Roaming {
       Rect()
         .width('100%')
         .height('100%')
-        .fill(new LinearGradient({
+        .fill(Color.Transparent)
+        .linearGradient({
           angle: 180,
           colors: [['rgba(0,0,0,0.2)', 0], ['rgba(0,0,0,0.8)', 1]]
-        }))
+        })
 
       Column() {
         // 顶部标题栏
@@ -210,7 +211,11 @@ export struct Roaming {
               .backgroundColor('rgba(255, 255, 255, 0.15)')
               .border({ width: 1, color: 'rgba(255, 255, 255, 0.3)' })
               .onClick(() => {
-                playerManager.pauseOrPlay()
+                if (this.playState.isPlay) {
+                  playerManager.paused()
+                } else {
+                  playerManager.resume()
+                }
               })
               
               Text(this.playState.isPlay ? '暂停' : '播放')
