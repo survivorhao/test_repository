@@ -190,6 +190,12 @@ export struct Mind {
                         action: () => {
                             this.pathStack.pushPathByName("EditPassword", null, false)
                         }
+                    },
+                    {
+                        value: '设置',
+                        action: () => {
+                            this.pathStack.pushPathByName("Settings", null, false)
+                        }
                     }
                 ])
           }

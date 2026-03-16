@@ -72,6 +72,14 @@
       "data": {
         "description": "this is Search"
       }
+    },
+    {
+      "name": "Settings",
+      "pageSourceFile": "src/main/ets/pages/Settings.ets",
+      "buildFunction": "SettingsBuilder",
+      "data": {
+        "description": "this is Settings"
+      }
     }
   ]
 }
