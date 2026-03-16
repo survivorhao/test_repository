@@ -43,6 +43,34 @@ export struct Recommend {
     }
   }
 
+  async startRoaming() {
+    try {
+      // 获取推荐歌单，这里复用getRecommendPlaylists，实际漫游可能需要更随机的接口
+      const resp = await apiService.getRecommendPlaylists()
+      if (resp.code === 200 && resp.data && resp.data.length > 0) {
+        // 随机选择一个歌单的歌曲进行播放
+        const randomIndex = Math.floor(Math.random() * resp.data.length)
+        const playlistId = resp.data[randomIndex].id
+        const playlistSongsResp = await apiService.getNetEasePlaylistDetail(playlistId)
+
+        if (playlistSongsResp.code === 200 && playlistSongsResp.data && playlistSongsResp.data.length > 0) {
+          // 开始播放第一个歌曲，并将整个歌单作为播放列表
+          playerManager.singPlay(playlistSongsResp.data[0], playlistSongsResp.data)
+          promptAction.showToast({ message: `开始漫游：${resp.data[randomIndex].name}` })
+          // 跳转到播放页
+          this.pathStack.pushPathByName("Play", null, false)
+        } else {
+          promptAction.showToast({ message: "未能获取漫游歌曲，请稍后再试" })
+        }
+      } else {
+        promptAction.showToast({ message: "未能获取推荐歌单，请稍后再试" })
+      }
+    } catch (e) {
+      console.error("Start roaming failed:", e)
+      promptAction.showToast({ message: "漫游失败，请检查网络或稍后再试" })
+    }
+  }
+
   jumpToSearch() {
     if (this.searchText.trim()) {
       this.pathStack.pushPathByName('Search', [this.searchText], false)
@@ -93,6 +121,29 @@ export struct Recommend {
       .backgroundColor('#2D2B29')
       .border({radius:20})
       .padding({left:8,right:8})
+
+      // 漫游功能入口
+      Row() {
+        Image($r('app.media.ic_random'))
+          .width(24)
+          .height(24)
+          .fillColor('#E85A88')
+        Text('个性漫游')
+          .fontSize(16)
+          .fontColor('#fff')
+          .fontWeight(FontWeight.Medium)
+          .margin({ left: 8 })
+      }
+      .width('100%')
+      .height(50)
+      .backgroundColor('#2D2B29')
+      .border({ radius: 10 })
+      .padding({ left: 15, right: 15 })
+      .justifyContent(FlexAlign.Start)
+      .alignItems(VerticalAlign.Center)
+      .onClick(() => {
+        this.startRoaming()
+      })
 
       // 轮播图
       Swiper() {
