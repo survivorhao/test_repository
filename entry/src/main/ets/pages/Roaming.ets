@@ -10,11 +10,33 @@ export struct Roaming {
   @Local playState: GlobalMusic = AppStorageV2.connect(GlobalMusic, 'SONG_KEY', () => new GlobalMusic())!
   @Local isLoading: boolean = false
   @Local currentPlaylistName: string = "正在探索..."
+  @Local rotateAngle: number = 0 // 唱片旋转角度
+  
+  // 模拟旋转动画
+  private timerId: number = -1
 
   aboutToAppear() {
-    // 如果当前没有播放列表，自动开启漫游
     if (this.playState.playList.length === 0) {
       this.startRoaming()
+    }
+    this.startAnimation()
+  }
+
+  aboutToDisappear() {
+    this.stopAnimation()
+  }
+
+  startAnimation() {
+    this.timerId = setInterval(() => {
+      if (this.playState.isPlay) {
+        this.rotateAngle = (this.rotateAngle + 2) % 360
+      }
+    }, 50)
+  }
+
+  stopAnimation() {
+    if (this.timerId !== -1) {
+      clearInterval(this.timerId)
     }
   }
 
@@ -43,123 +65,195 @@ export struct Roaming {
 
   build() {
     Stack() {
-      // 沉浸式背景：当前播放歌曲的封面模糊效果
+      // 1. 动态氛围背景层
       Image(this.playState.playList[this.playState.playIndex]?.img || $r('app.media.bg_mine'))
         .width('100%')
         .height('100%')
-        .blur(50)
+        .blur(80)
         .objectFit(ImageFit.Cover)
-        .opacity(0.4)
+        .opacity(0.6)
+      
+      // 2. 黑色渐变遮罩，增加文字可读性
+      Rect()
+        .width('100%')
+        .height('100%')
+        .fill(new LinearGradient({
+          angle: 180,
+          colors: [['rgba(0,0,0,0.2)', 0], ['rgba(0,0,0,0.8)', 1]]
+        }))
 
       Column() {
-        // 顶部状态
+        // 顶部标题栏
         Row() {
-          Text('音乐漫游')
-            .fontSize(20)
-            .fontWeight(FontWeight.Bold)
+          Text('漫游模式')
+            .fontSize(22)
+            .fontWeight(700)
             .fontColor(Color.White)
+            .letterSpacing(2)
+            .shadow({ radius: 10, color: 'rgba(0,0,0,0.5)' })
           
           if (this.isLoading) {
             LoadingProgress()
               .width(24)
               .height(24)
-              .color(Color.White)
-              .margin({ left: 10 })
+              .color('#E85A88')
+              .margin({ left: 12 })
           }
         }
         .width('100%')
-        .padding(20)
+        .padding({ top: 40, bottom: 20 })
         .justifyContent(FlexAlign.Center)
 
-        Blank()
+        // 3. 核心唱机视觉区域
+        Stack({ alignContent: Alignment.Top }) {
+          // 唱片主体
+          Stack() {
+            // 外圈阴影光晕
+            Circle()
+              .width(305)
+              .height(305)
+              .fill('rgba(255,255,255,0.05)')
+            
+            // 黑胶唱片底盘
+            Image($r('app.media.ic_cd'))
+              .width(300)
+              .height(300)
+              .rotate({ angle: this.rotateAngle })
+            
+            // 歌曲封面
+            Image(this.playState.playList[this.playState.playIndex]?.img || $r('app.media.logo5'))
+              .width(200)
+              .height(200)
+              .borderRadius(100)
+              .rotate({ angle: this.rotateAngle })
+              .shadow({ radius: 15, color: 'rgba(0,0,0,0.8)', offsetX: 5, offsetY: 5 })
+          }
+          .margin({ top: 60 })
 
-        // 核心视觉：黑胶唱片旋转感
-        Stack({ alignContent: Alignment.Center }) {
-          // 唱片底盘
-          Circle()
-            .width(260)
-            .height(260)
-            .fill('#111')
-            .shadow({ radius: 20, color: '#000', offsetX: 5, offsetY: 5 })
-          
-          // 歌曲封面
-          Image(this.playState.playList[this.playState.playIndex]?.img || $r('app.media.logo5'))
-            .width(240)
-            .height(240)
-            .borderRadius(120)
-            .objectFit(ImageFit.Cover)
-            // 模拟旋转效果（实际需要animation，这里简化为静态展示）
+          // 唱针（Stylus）
+          Image($r('app.media.ic_stylus'))
+            .width(100)
+            .height(150)
+            .margin({ left: 130 })
+            .rotate({ 
+              angle: this.playState.isPlay ? 0 : -30,
+              centerX: 25,
+              centerY: 25
+            })
+            .animation({ duration: 500, curve: Curve.EaseInOut })
         }
-        .margin({ bottom: 40 })
+        .layoutWeight(1)
 
-        // 歌曲信息
-        Column({ space: 8 }) {
-          Text(this.playState.playList[this.playState.playIndex]?.name || '暂无播放内容')
-            .fontSize(24)
+        // 4. 歌曲信息与控制面板（玻璃拟态设计）
+        Column() {
+          // 歌曲名称
+          Text(this.playState.playList[this.playState.playIndex]?.name || '开启探索之旅')
+            .fontSize(26)
             .fontWeight(FontWeight.Bold)
             .fontColor(Color.White)
             .textAlign(TextAlign.Center)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .margin({ bottom: 8 })
 
+          // 艺术家
           Text(this.playState.playList[this.playState.playIndex]?.author || '未知艺术家')
             .fontSize(16)
-            .fontColor('#ccc')
+            .fontColor('rgba(255,255,255,0.7)')
             .textAlign(TextAlign.Center)
-        }
-        .padding({ left: 30, right: 30 })
+            .margin({ bottom: 20 })
 
-        Text(`来自：${this.currentPlaylistName}`)
-          .fontSize(12)
-          .fontColor('#888')
-          .margin({ top: 10 })
-
-        Blank()
-
-        // 漫游控制
-        Row({ space: 40 }) {
-          // 换一换按钮
-          Column({ space: 5 }) {
-            Button({ type: ButtonType.Circle }) {
-              Image($r('app.media.ic_random'))
-                .width(30)
-                .fillColor(Color.White)
-            }
-            .width(60)
-            .height(60)
-            .backgroundColor('#33E85A88')
-            .onClick(() => this.startRoaming())
-            
-            Text('换个频道')
-              .fontSize(12)
-              .fontColor(Color.White)
+          // 来源标签
+          Row() {
+            Image($r('app.media.ic_music'))
+              .width(14)
+              .fillColor('rgba(255,255,255,0.5)')
+              .margin({ right: 6 })
+            Text(`正在漫游：${this.currentPlaylistName}`)
+              .fontSize(13)
+              .fontColor('rgba(255,255,255,0.5)')
           }
+          .padding({ left: 12, right: 12, top: 4, bottom: 4 })
+          .backgroundColor('rgba(255,255,255,0.1)')
+          .borderRadius(12)
+          .margin({ bottom: 40 })
 
-          // 进入播放页详情
-          Column({ space: 5 }) {
-            Button({ type: ButtonType.Circle }) {
-              Image($r('app.media.ic_playing'))
-                .width(30)
+          // 控制按钮组
+          Row({ space: 50 }) {
+            // 换个频道
+            Column({ space: 8 }) {
+              Button({ type: ButtonType.Circle }) {
+                Image($r('app.media.ic_random'))
+                  .width(28)
+                  .fillColor(Color.White)
+              }
+              .width(64)
+              .height(64)
+              .backgroundColor('rgba(232, 90, 136, 0.2)')
+              .border({ width: 1, color: 'rgba(232, 90, 136, 0.4)' })
+              .onClick(() => this.startRoaming())
+              
+              Text('换个频道')
+                .fontSize(12)
+                .fontColor('rgba(255,255,255,0.8)')
             }
-            .width(60)
-            .height(60)
-            .backgroundColor('#3363AAAA')
-            .onClick(() => {
-              this.pathStack.pushPathByName("Play", null, false)
-            })
-            
-            Text('查看详情')
-              .fontSize(12)
-              .fontColor(Color.White)
+
+            // 播放/暂停
+            Column({ space: 8 }) {
+              Button({ type: ButtonType.Circle }) {
+                Image(this.playState.isPlay ? $r('app.media.ic_paused') : $r('app.media.ic_play'))
+                  .width(32)
+                  .fillColor(Color.White)
+              }
+              .width(72)
+              .height(72)
+              .backgroundColor('rgba(255, 255, 255, 0.15)')
+              .border({ width: 1, color: 'rgba(255, 255, 255, 0.3)' })
+              .onClick(() => {
+                playerManager.pauseOrPlay()
+              })
+              
+              Text(this.playState.isPlay ? '暂停' : '播放')
+                .fontSize(12)
+                .fontColor('rgba(255,255,255,0.8)')
+            }
+
+            // 详情
+            Column({ space: 8 }) {
+              Button({ type: ButtonType.Circle }) {
+                Image($r('app.media.ic_playing'))
+                  .width(28)
+              }
+              .width(64)
+              .height(64)
+              .backgroundColor('rgba(99, 170, 170, 0.2)')
+              .border({ width: 1, color: 'rgba(99, 170, 170, 0.4)' })
+              .onClick(() => {
+                this.pathStack.pushPathByName("Play", null, false)
+              })
+              
+              Text('播放详情')
+                .fontSize(12)
+                .fontColor('rgba(255,255,255,0.8)')
+            }
           }
+          .width('100%')
+          .justifyContent(FlexAlign.Center)
+          .margin({ bottom: 60 })
         }
-        .margin({ bottom: 100 })
+        .width('90%')
+        .padding(30)
+        .backgroundColor('rgba(255,255,255,0.05)')
+        .borderRadius(32)
+        .border({ width: 1, color: 'rgba(255,255,255,0.1)' })
+        .margin({ bottom: 40 })
+        .backdropBlur(20) // 毛玻璃效果
       }
       .width('100%')
       .height('100%')
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#131215')
+    .backgroundColor('#000')
   }
 }
